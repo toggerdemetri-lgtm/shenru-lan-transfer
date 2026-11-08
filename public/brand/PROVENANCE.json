@@ -1,0 +1,17 @@
+{
+  "source": "User supplied Adobe Illustrator artwork",
+  "sourceSHA256": "f7d48294692f970e3fd10bee3f2f86637f29104c56aba0343c15203727b75bb3",
+  "filledVectorPaths": 3,
+  "originalColor": "#000000",
+  "darkInterfaceColor": "#C5EAFF",
+  "icoSizes": [
+    16,
+    20,
+    24,
+    32,
+    48,
+    64,
+    128,
+    256
+  ]
+}

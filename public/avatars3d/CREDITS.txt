@@ -1,0 +1,9 @@
+深入 · 多色立体角色头像
+朱红街头 / 翠绿旅人 / 橙色星火 / 金色小光 / 青色冰核
+紫色夜游 / 玫红声波 / 钴蓝航手 / 银白灵偶 / 荧绿萌芽
+
+AI-generated character portraits created with the built-in image generation tool,
+guided by the user's supplied 3D character style references.
+Canva was installed and enabled, but its generation endpoint was unavailable;
+no Canva generation job or Canva-hosted design is used by this website.
+All final artwork is bundled locally. Original vector portraits remain in ../avatars.

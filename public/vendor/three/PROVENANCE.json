@@ -1,0 +1,8 @@
+{
+  "name": "three",
+  "version": "0.181.0",
+  "license": "MIT",
+  "source": "Copied from the user's existing local TinyStar66 project node_modules/three/build",
+  "files": ["three.module.min.js", "three.core.min.js"],
+  "licenseFile": "LICENSE"
+}

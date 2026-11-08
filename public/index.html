@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <style id="boot-colors">html,body{background:#060c20;color-scheme:dark}</style>
+  <script src="/background-boot.js"></script>
+  <meta name="theme-color" content="#060c20"><meta name="description" content="深入·局域网互传：局域网聊天与原文件互传，支持原图、10GB 大文件和断点续传。">
+  <title>深入·局域网互传</title><link rel="icon" href="/favicon.svg?v=logo-2" type="image/svg+xml"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/glass.css"><link rel="stylesheet" href="/universe.css">
+  <script type="module" src="/app.js"></script>
+  <script type="module" src="/universe.js"></script>
+</head>
+<body>
+<div class="universe-background" aria-hidden="true">
+ <div class="star-art" data-renderer="static">
+  <div class="star-fallback"><svg class="fallback-land" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice"><defs><linearGradient id="land" x2="0" y2="1"><stop stop-color="#33a8e9" stop-opacity=".1"/><stop offset="1" stop-color="#040b1b"/></linearGradient></defs><path fill="url(#land)" stroke="#35a9e1" stroke-opacity=".35" d="M0 643 130 590 220 620 360 675 580 648 690 625 800 670 1030 696 1160 658 1400 540 1600 600V900H0Z"/><g fill="none" stroke="#49b6e8" stroke-opacity=".18"><path d="m0 671 130-47 90 23 140 61 220-21 110-22 110 41 230 19 130-29 240-113 200 52M0 707l130-39 90 21 140 54 220-18 110-19 110 35 230 17 130-25 240-99 200 49M0 751l130-32 90 18 140 45 220-15 110-16 110 29 230 14 130-20 240-82 200 40M0 803l130-23 90 13 140 33 220-10 110-12 110 21 230 10 130-15 240-58 200 29M0 864l130-12 90 6 140 17 220-5 110-6 110 11 230 5 130-8 240-29 200 14"/><path d="m130 590 55 310m35-280 60 280m80-225 30 225m190-252-20 252m130-275-20 275m130-230 30 230m200-204 70 204m60-242 100 242m140-360 120 360M0 643 0 900m1600-300v300"/></g></svg></div>
+  <div id="star-scene"></div>
+ </div>
+ <div class="universe-shade"></div>
+</div>
+<button id="background-motion" class="background-motion" type="button" aria-pressed="false" aria-label="开启动效"><span class="background-motion-icon" aria-hidden="true">▷</span><span class="background-motion-label">开启动效</span></button>
+<svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+ <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/><path d="M8 11h8m-8 4h5"/></symbol>
+ <symbol id="i-people" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m20 0v-2a4 4 0 0 0-3-3.9M15 3.1a4 4 0 0 1 0 7.8"/><circle cx="9" cy="7" r="4"/></symbol>
+ <symbol id="i-transfer" viewBox="0 0 24 24"><path d="M7 3v15m-4-4 4 4 4-4m6 7V6m-4 4 4-4 4 4"/></symbol>
+ <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+ <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol>
+ <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M2 8a16 16 0 0 1 20 0M5 12a11 11 0 0 1 14 0m-11 4a6 6 0 0 1 8 0"/><circle cx="12" cy="20" r=".5"/></symbol>
+ <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Zm0 0v6h6M8 13h8m-8 4h5"/></symbol>
+ <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></symbol>
+ <symbol id="i-arrow" viewBox="0 0 24 24"><path d="m5 12 14 0m-6-6 6 6-6 6"/></symbol>
+ <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+ <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Zm0 0L11 13"/></symbol>
+ <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+ <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+ <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+ <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></symbol>
+ <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v4h16v-4"/></symbol>
+</defs></svg>
+<div id="app" class="app-shell">
+ <header class="workspace-header">
+   <a href="/" class="workspace-brand" aria-label="深入·局域网互传首页"><img src="/brand/logo.svg" alt="" width="32" height="32"><span class="product-name">深入·局域网互传</span></a>
+   <nav class="workspace-tabs" aria-label="工作空间导航">
+     <button class="header-tab active" data-view="chats" aria-pressed="true">我的好友</button>
+     <button class="header-tab" data-view="files" aria-pressed="false">文件传输</button>
+   </nav>
+   <button id="workspace-profile" class="workspace-profile" title="修改昵称"><span id="workspace-avatar" class="profile-orb" aria-hidden="true"></span><span><strong id="workspace-nickname">我的空间</strong><small>本地工作空间</small></span><svg><use href="#i-arrow"/></svg></button>
+ </header>
+ <nav class="rail" aria-label="主导航">
+   <a class="brand-mark" href="/" aria-label="深入·局域网互传首页"><img src="/brand/logo.svg" alt="" width="28" height="28"></a>
+   <div class="rail-items">
+    <button class="rail-button active" data-view="chats" title="好友、申请与在线邻居" aria-label="我的好友" aria-pressed="true"><svg><use href="#i-people"/></svg><span>好友</span><b id="request-dot" hidden></b></button>
+    <button class="rail-button" data-view="files" title="传输记录" aria-label="传输" aria-pressed="false"><svg><use href="#i-transfer"/></svg><span>传输</span></button>
+   </div>
+   <button class="rail-button help-button" id="help-button" title="使用说明" aria-label="使用说明"><svg><use href="#i-info"/></svg></button>
+   <button id="profile-button" class="avatar self-avatar" title="修改昵称" aria-label="修改昵称">深</button>
+ </nav>
+ <aside class="sidebar">
+   <header class="sidebar-heading"><div><h1 aria-label="深入·局域网互传">深入<span class="brand-dot">·</span><span class="brand-suffix">局域网互传</span></h1><p class="brand-caption">聊天与文件，近在身边。</p></div><button id="add-button" class="icon-button add-button" title="添加好友" aria-label="添加好友"><svg><use href="#i-plus"/></svg></button></header>
+   <div class="connection-chip"><span id="connection-dot" class="status-dot"></span><span id="connection-text">正在连接局域网…</span><svg><use href="#i-wifi"/></svg></div>
+   <a class="share-entry-link" href="/share.html" download="深入·局域网互传.html">下载 HTML 入口，发给朋友 <span aria-hidden="true">↗</span></a>
+   <label class="search-box"><svg><use href="#i-search"/></svg><input id="search" type="search" placeholder="搜索好友或在线邻居" aria-label="搜索好友、邻居或文件"></label>
+   <div class="section-label"><span id="list-title">我的好友</span><span id="list-count">00</span></div>
+   <div id="contact-list" class="contact-list"></div>
+   <footer class="sidebar-footer"><div class="code-heading"><span class="tiny-label">我的好友码</span><span class="code-hint">点击复制</span></div><button id="copy-code" title="复制我的好友码" aria-label="复制我的好友码"><span id="my-code">— — — —</span><svg><use href="#i-copy"/></svg></button></footer>
+ </aside>
+ <main class="main-panel" id="main-panel">
+   <header class="topbar"><span class="topbar-context">深入·局域网互传</span><span class="local-pill"><span class="status-dot"></span> 正在连接</span></header>
+   <section id="welcome" class="welcome">
+     <div class="welcome-content">
+       <div class="welcome-eyebrow"><span class="eyebrow-line"></span> A LITTLE CLOSER.</div>
+       <h2>近在身边，<br><span>分享无间。</span></h2>
+       <p class="welcome-description">一句问候，一张原图，一份大文件。<br>同一个网络，让分享自然发生。</p>
+       <div class="welcome-actions"><button id="discover-button" class="primary-button">发现身边的人 <svg><use href="#i-arrow"/></svg></button><button id="welcome-add-button" class="text-button">通过好友码添加 <svg><use href="#i-plus"/></svg></button></div>
+       <div class="feature-strip"><span><svg><use href="#i-image"/></svg>原图不压缩</span><span><svg><use href="#i-transfer"/></svg>断点续传</span><span><svg><use href="#i-wifi"/></svg>本地直达</span></div>
+     </div>
+     <aside class="welcome-aside" aria-label="传输能力与空间状态">
+       <div class="capability-card"><div class="capability-heading"><span class="capability-icon"><svg><use href="#i-file"/></svg></span><span>文件再大<br>也能从容分享</span></div><div class="capability-number">10<span>GB</span></div><p>单文件传输上限</p><div class="capability-foot"><span>保留原始品质</span><svg><use href="#i-check"/></svg></div></div>
+       <div class="space-status"><div class="space-status-heading"><span class="status-dot"></span> 当前空间</div><div class="space-stats"><div><strong id="online-count">0</strong><span>在线邻居</span></div><div><strong id="transfer-count">0</strong><span>传输文件</span></div></div></div>
+     </aside>
+   </section>
+   <section id="chat" class="chat-panel" hidden>
+    <header class="chat-heading"><button id="back-button" class="icon-button mobile-back" aria-label="返回好友列表"><svg><use href="#i-back"/></svg></button><div id="peer-avatar" class="avatar">深</div><div class="peer-details"><h2 id="peer-name"></h2><p id="peer-status"></p></div><span class="original-tag">原文件 · 不压缩</span><div class="batch-download-wrap"><button id="batch-download" class="batch-download" type="button" hidden><svg aria-hidden="true"><use href="#i-download"/></svg><span id="batch-download-label">下载未下载文件</span></button><span class="batch-download-caption"><span id="batch-download-hint" class="batch-download-hint" hidden></span><button id="batch-download-retry" class="batch-download-retry" type="button" title="允许浏览器下载多个文件后，可重试上一批；可能再次保存同名文件" hidden>重新下载本批</button></span></div></header>
+    <div class="session-notice"><svg><use href="#i-info"/></svg><span>双方离线 5 分钟后，本次聊天和临时文件将被清理。</span></div>
+    <div class="messages-frame"><div id="messages" class="messages" aria-live="polite" tabindex="0" aria-label="聊天记录"></div><button id="new-messages" class="new-messages-pill" type="button" hidden><span id="new-messages-label" role="status" aria-live="polite">您有 0 条新消息</span><span aria-hidden="true">↓</span></button></div>
+    <div class="composer" id="composer"><div id="composer-resizer" class="composer-resizer" role="separator" tabindex="0" aria-label="调整输入框高度" aria-orientation="horizontal" aria-controls="message-input" title="上下拖动调整输入框高度，方向键亦可调整"></div><div class="composer-tools"><button id="choose-files" class="icon-button" title="发送文件" aria-label="发送文件"><svg><use href="#i-file"/></svg></button><button id="choose-images" class="icon-button" title="发送原图" aria-label="发送原图"><svg><use href="#i-image"/></svg></button><span>单文件最大 10GB</span></div><textarea id="message-input" maxlength="16000" rows="2" placeholder="输入消息，或拖入文件" aria-label="聊天消息"></textarea><div class="composer-bottom"><span>Enter 发送 · Shift + Enter 换行</span><button id="send-button" class="send-button">发送 <svg><use href="#i-send"/></svg></button></div></div>
+   </section>
+   <div id="drop-overlay" class="drop-overlay" hidden><svg><use href="#i-file"/></svg><h2>松手，发送原文件</h2><p>不压缩，保留每一份细节</p></div>
+   <footer class="main-footer"><span>让文件流动，让距离消失。</span><span><svg><use href="#i-wifi"/></svg> 本地传输 · 无需互联网</span></footer>
+ </main>
+</div>
+<dialog id="identity-dialog" class="modal identity-modal" aria-labelledby="identity-title"><form id="identity-form"><div class="modal-symbol"><img src="/brand/logo.svg" alt="" width="30" height="30"></div><div class="modal-eyebrow">从一句你好开始</div><h2 id="identity-title">欢迎来到深入·局域网互传。</h2><p>取个昵称，让同一网络里的朋友认出你。</p><label class="field-label" for="nickname">你的昵称</label><input id="nickname" maxlength="24" autocomplete="nickname" placeholder="例如：小林" required aria-describedby="identity-error"><p class="field-error" id="identity-error" role="alert"></p><button class="primary-button full-width" type="submit">进入深入·局域网互传 <svg><use href="#i-arrow"/></svg></button><div class="modal-footnote">首次进入随机分配人物头像，之后保持不变。<br>无需注册，身份保存在当前浏览器。</div></form></dialog>
+<dialog id="add-dialog" class="modal"><button class="modal-close icon-button" data-close="add-dialog" aria-label="关闭"><svg><use href="#i-close"/></svg></button><h2>添加好友</h2><p>输入好友码，或添加下方的在线用户。</p><form id="add-form"><label class="field-label" for="friend-code">对方的好友码</label><input id="friend-code" maxlength="8" placeholder="8 位好友码" required autocomplete="off"><p id="add-error" class="field-error" role="alert"></p><button class="primary-button full-width" type="submit">发送好友申请 <svg><use href="#i-plus"/></svg></button></form><div class="dialog-divider"></div><div class="tiny-label">在线用户</div><div id="dialog-nearby"></div></dialog>
+<dialog id="help-dialog" class="modal"><button class="modal-close icon-button" data-close="help-dialog" aria-label="关闭"><svg><use href="#i-close"/></svg></button><h2>使用说明</h2><ol class="help-list"><li>Windows 打开 EXE 或 Mac 打开 APP，服务会在后台运行；从托盘或顶部菜单栏选择“退出深入·局域网互传”结束本机程序。</li><li>朋友连到同一个局域网，打开同一个局域网网址。</li><li>在「我的好友」列表中添加在线邻居，对方同意后即可聊天传文件。</li></ol><p>文件先上传到服务电脑，完成校验后对方可以下载。照片不压缩，下载的是原文件。</p><p>聊天与文件内容自动加密，不增加操作。大文件会在本浏览器分块解密、暂存并校验后保存，需要足够的浏览器空间。</p><p class="help-note">当前仍为局域网 HTTP，首次密钥未经独立验证；文件名、大小等元数据可见，不能可靠防止主动替换网页或密钥。清除浏览器密钥可能使旧内容无法解密。</p><p>刷新后续传需要重新选择原文件。双方离线超过 5 分钟或服务重启后，会话和临时文件会清除；好友保留。</p><p>同一好友在当前会话发来至少 3 个文件或图片后，可“下载未下载文件”。逐个保存原文件，并跳过本浏览器已经校验并发起保存的内容；预览不计入下载。下载记录从此版本开始，刷新后保留，换浏览器、网址或清除数据后不互通。</p><p class="help-note">首次批量保存请允许浏览器下载多个文件，并在下载列表确认。网页无法检测保存窗口取消或浏览器拦截；有遗漏时，允许浏览器下载多个文件后点击“重新下载本批”；刷新后也保留此入口。旧记录没有批次信息时显示“重新下载已记录文件”。原来的单文件下载按钮仍可重新保存。应用内下载失败或取消的内容仍可再次批量下载。</p><p class="help-note">换浏览器、清除浏览器数据或换用不同网址，会成为新身份。手机传大文件时请保持网页在前台，并确认设备空间充足。</p><div class="completion-reminder-setting"><button id="completion-reminder-button" class="secondary-button full-width" type="button" aria-pressed="false">开启系统完成提醒</button><p id="completion-reminder-note" class="help-note">授权后，在上传校验成功时显示系统提醒。</p></div><button class="secondary-button full-width" data-close="help-dialog">知道了</button></dialog>
+<dialog id="preview-dialog" class="preview-modal"><button class="preview-close icon-button" data-close="preview-dialog" aria-label="关闭预览"><svg><use href="#i-close"/></svg></button><img id="preview-image" alt="原图预览"><div class="preview-download-actions"><button id="preview-download" class="primary-button file-download-primary" data-download-kind="primary" type="button"><span data-download-text>下载原文件</span> <svg><use href="#i-download"/></svg></button><button id="preview-download-again" class="file-download-again" data-download-kind="again" type="button" hidden>重新下载</button></div></dialog>
+<input id="file-input" type="file" multiple hidden><input id="image-input" type="file" accept="image/*" multiple hidden><input id="resume-input" type="file" hidden>
+<div id="toast" class="toast" role="status" hidden></div>
+<div id="download-notice" class="download-notice" role="status" hidden><span id="download-notice-label"></span><button id="cancel-download" type="button">取消下载</button></div>
+</body></html>

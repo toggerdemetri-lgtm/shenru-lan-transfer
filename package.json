@@ -1,0 +1,16 @@
+{
+  "name": "shenru-lan-chat",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "局域网聊天与原文件互传",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test",
+    "package": "node scripts/package.mjs",
+    "package:portable": "node scripts/package-portable.mjs"
+  }
+}

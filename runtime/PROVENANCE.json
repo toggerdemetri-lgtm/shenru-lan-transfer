@@ -1,0 +1,7 @@
+{
+  "version": "v24.22.1",
+  "platform": "win32",
+  "arch": "x64",
+  "sha256": "b59feb2088f80e1fa431c8f9c316861e660e5936f968fd97b802e550fed356c5",
+  "source": "Bundled local Node.js runtime"
+}

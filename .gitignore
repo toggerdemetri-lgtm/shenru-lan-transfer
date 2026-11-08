@@ -1,0 +1,23 @@
+# Local data and generated files
+.data/
+.qa/
+.finesse/
+dist/
+node_modules/
+**/node_modules/
+__pycache__/
+*.log
+*.sqlite
+*.sqlite-*
+*.db
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+# Download runtime binaries locally; installers belong in GitHub Releases.
+runtime/node.exe
+runtime/macos-*/bin/
+runtime/macos-*/*.tar.gz
+runtime/macos-*/*.part

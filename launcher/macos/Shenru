@@ -1,0 +1,6 @@
+#!/bin/sh
+# LaunchServices invokes this file directly; no Terminal or shell profile.
+set -eu
+resources="$(CDPATH= cd -- "$(dirname -- "$0")/../Resources" && pwd)"
+app="$(CDPATH= cd -- "$resources/../.." && pwd)"
+exec /usr/bin/osascript -l JavaScript "$resources/menu.js" "$resources" "$app"

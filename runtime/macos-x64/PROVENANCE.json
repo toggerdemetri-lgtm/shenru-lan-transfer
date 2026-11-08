@@ -1,0 +1,9 @@
+{
+  "source": "https://nodejs.org/dist/v24.22.1/node-v24.22.1-darwin-x64.tar.gz",
+  "manifest": "https://nodejs.org/dist/v24.22.1/SHASUMS256.txt",
+  "version": "24.22.1",
+  "arch": "x64",
+  "archiveSha256": "d132557e7ee2b85af08b0c8c34338e65c6430f2238d01f727728ef42dc83b035",
+  "nodeSha256": "cc6f41f72e3eb4460154952e56a35afdd96b6995cea51cd25e637355a2955a51",
+  "verifiedAt": "2026-11-05T02:41:26.766Z"
+}

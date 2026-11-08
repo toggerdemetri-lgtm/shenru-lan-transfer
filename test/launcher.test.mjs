@@ -1,0 +1,21 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+test('portable tray uses managed framework UI and retains console-free service lifetime', async () => {
+  const launcher = await readFile(new URL('../launcher/Launcher.cs', import.meta.url), 'utf8');
+  const packager = await readFile(new URL('../scripts/package-portable.mjs', import.meta.url), 'utf8');
+  const tray = await readFile(new URL('../launcher/TrayHost.cs', import.meta.url), 'utf8');
+  assert.doesNotMatch(launcher + tray, /DllImport|SetWindowLongPtr|NativeTray|WndProc/);
+  assert.match(tray, /NotifyIcon/);
+  assert.match(tray, /ContextMenuStrip/);
+  assert.match(tray, /SetApartmentState\(ApartmentState\.STA\)/);
+  assert.match(tray, /Application\.Run/);
+  assert.match(tray, /打开深入·局域网互传/); assert.match(tray, /退出深入·局域网互传/);
+  assert.match(tray, /Visible = false/);
+  assert.match(packager, /TrayHost\.cs/);
+  assert.doesNotMatch(packager, /join\(output, '退出深入·局域网互传\.exe'\)/);
+  assert.match(packager, /target:winexe/);
+  assert.doesNotMatch(launcher, /Console\.ReadLine|Console\.CancelKeyPress|保持此窗口运行/);
+  assert.match(launcher, /EventWaitHandle/);
+  assert.doesNotMatch(launcher, /if\s*\(Headless\)\s*return/);
+});
