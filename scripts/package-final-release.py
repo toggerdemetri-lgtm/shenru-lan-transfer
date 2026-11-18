@@ -7,6 +7,7 @@ import hashlib,json,plistlib,shutil,stat,zipfile,struct
 
 ROOT=Path(__file__).resolve().parent.parent
 DIST=ROOT/'dist'
+VERSION=json.loads((ROOT/'package.json').read_text(encoding='utf-8'))['version']
 def find(name):
     direct=DIST/name
     if direct.exists():return direct
@@ -20,8 +21,8 @@ def app_files(path):
         prefix=next(n[:-len('Contents/Info.plist')] for n in z.namelist() if n.endswith('Contents/Info.plist'))
         return {n[len(prefix):]:z.read(n) for n in z.namelist() if n.startswith(prefix) and not n.endswith('/')}
 
-win=find('深入·局域网互传-1.0.0-EXE+HTML-Windows-x64.zip')
-mac={arch:app_files(find(f'深入·局域网互传-1.0.0-APP+HTML-macOS-{arch}.zip')) for arch in ['arm64','x64']}
+win=find(f'深入·局域网互传-{VERSION}-EXE+HTML-Windows-x64.zip')
+mac={arch:app_files(find(f'深入·局域网互传-{VERSION}-APP+HTML-macOS-{arch}.zip')) for arch in ['arm64','x64']}
 runtime='Contents/Resources/runtime/'
 shared={k:v for k,v in mac['arm64'].items() if not k.startswith(runtime)}
 assert shared=={k:v for k,v in mac['x64'].items() if not k.startswith(runtime)},'Platform-independent Mac sources differ'
@@ -37,7 +38,7 @@ for arch,source in mac.items():
     for name,value in source.items():
         if name.startswith(runtime):files[runtime+arch+'/'+name[len(runtime):]]=value
     executables.add(runtime+arch+'/node')
-    nodes[arch]={'nodeSha256':digest(node),'sourceArchive':str(find(f'深入·局域网互传-1.0.0-APP+HTML-macOS-{arch}.zip').name)}
+    nodes[arch]={'nodeSha256':digest(node),'sourceArchive':str(find(f'深入·局域网互传-{VERSION}-APP+HTML-macOS-{arch}.zip').name)}
 
 # Retain each signed official Mach-O file unchanged; select it with a tiny OS shell wrapper.
 wrapper=b'''#!/bin/sh
@@ -52,14 +53,14 @@ esac
 files[runtime+'node']=wrapper
 files[runtime+'PROVENANCE.json']=json.dumps({'selection':'uname -m; original official binaries unchanged','architectures':nodes},ensure_ascii=False,indent=2).encode('utf-8')
 info=plistlib.loads(files['Contents/Info.plist'])
-assert info['CFBundleShortVersionString']=='1.0.0' and info['LSUIElement']
+assert info['CFBundleShortVersionString']==VERSION and info['LSUIElement']
 
 prefix='深入·局域网互传 Mac/深入·局域网互传.app/'
 entries={prefix+k:v for k,v in files.items()}
-with zipfile.ZipFile(find('深入·局域网互传-1.0.0-APP+HTML-macOS-arm64.zip')) as z:
+with zipfile.ZipFile(find(f'深入·局域网互传-{VERSION}-APP+HTML-macOS-arm64.zip')) as z:
     entry=next(n for n in z.namelist() if n.endswith('/深入·局域网互传.html') and '/深入·局域网互传.app/' not in n)
     entries['深入·局域网互传 Mac/深入·局域网互传.html']=z.read(entry)
-entries['深入·局域网互传 Mac/使用说明.txt']='''深入·局域网互传 1.0.0 · Mac 版
+entries['深入·局域网互传 Mac/使用说明.txt']=f'''深入·局域网互传 {VERSION} · Mac 版
 
 只有一个“深入·局域网互传.app”，会自动选择苹果芯片或 Intel 对应的运行时，无需手动挑选。
 要求 macOS 13.5 或更新版本。完整解压，保留“深入·局域网互传.app”和“深入·局域网互传.html”在同一文件夹，再双击应用。
@@ -97,6 +98,6 @@ shutil.copyfile(win,DIST/'深入·局域网互传-Windows.zip')
 with zipfile.ZipFile(DIST/'深入·局域网互传-Windows.zip') as z:
     assert z.testzip() is None and set(z.namelist())=={'深入·局域网互传.exe','深入·局域网互传.html','使用说明.txt'}
 assert (DIST/'深入·局域网互传-Windows.zip').read_bytes()==win.read_bytes()
-report={'version':'1.0.0','macOneApp':True,'macAutoArchitectureSelection':True,'macNativeExecuted':False,'signed':False,'nodes':nodes,'files':[{'name':p.name,'bytes':p.stat().st_size,'sha256':digest(p.read_bytes()),'crc':True} for p in [DIST/'深入·局域网互传-Windows.zip',target]]}
+report={'version':VERSION,'macOneApp':True,'macAutoArchitectureSelection':True,'macNativeExecuted':False,'signed':False,'nodes':nodes,'files':[{'name':p.name,'bytes':p.stat().st_size,'sha256':digest(p.read_bytes()),'crc':True} for p in [DIST/'深入·局域网互传-Windows.zip',target]]}
 (ROOT/'.qa/final-release-verification.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),'utf-8')
 print(json.dumps(report,ensure_ascii=False))

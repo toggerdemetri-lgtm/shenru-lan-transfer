@@ -11,7 +11,7 @@ internal sealed class TrayHost : IDisposable
 {
     private readonly Thread thread;
     private readonly ManualResetEvent ready = new ManualResetEvent(false);
-    private Control dispatcher;
+    private readonly object gate = new object();
     private TrayContext context;
     private volatile Exception failure;
     private bool disposed;
@@ -23,24 +23,34 @@ internal sealed class TrayHost : IDisposable
             try {
                 Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
                 using (var ui = new TrayContext(open, stop, mode)) {
-                    context = ui; dispatcher = ui.Dispatcher;
-                    ready.Set(); Application.Run(ui);
+                    lock (gate) {
+                        if (disposed) return;
+                        context = ui;
+                        ready.Set();
+                    }
+                    Application.Run(ui);
                 }
-            } catch (Exception error) { failure = error; ready.Set(); try { stop(); } catch {} }
-            finally { dispatcher = null; context = null; }
+            } catch (Exception error) { failure = error; ready.Set(); }
+            finally { lock (gate) { context = null; } }
         });
         thread.Name = "Shenru system tray"; thread.IsBackground = true;
         thread.SetApartmentState(ApartmentState.STA); thread.Start();
-        if (!ready.WaitOne(10000)) throw new Exception("系统托盘启动超时。");
-        if (failure != null) throw new Exception("系统托盘启动失败。", failure);
+    }
+
+    internal bool WaitForStartup(int timeoutMs)
+    {
+        return ready.WaitOne(timeoutMs) && failure == null;
     }
 
     public void Dispose()
     {
-        if (disposed) return; disposed = true;
-        var ui = context; var target = dispatcher;
-        if (ui != null && target != null) {
-            try { target.BeginInvoke(new MethodInvoker(ui.ExitThread)); } catch (InvalidOperationException) {}
+        lock (gate) {
+            if (disposed) return;
+            disposed = true;
+            var ui = context;
+            if (ui != null) {
+                try { ui.Dispatcher.BeginInvoke(new MethodInvoker(ui.ExitThread)); } catch (InvalidOperationException) {}
+            }
         }
         if (thread.Join(5000)) ready.Dispose();
     }

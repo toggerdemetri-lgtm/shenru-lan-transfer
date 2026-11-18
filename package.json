@@ -1,6 +1,6 @@
 {
   "name": "shenru-lan-chat",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "type": "module",
   "description": "局域网聊天与原文件互传",

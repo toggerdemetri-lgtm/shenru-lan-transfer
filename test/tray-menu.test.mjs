@@ -16,6 +16,7 @@ internal class Probe {
    int opened=0,stopped=0;
    var mode=cycle%2==0?"host":"join";
    using(var tray=new TrayHost(delegate{opened++;},delegate{stopped++;},mode)) {
+    if(!tray.WaitForStartup(10000))throw new Exception("tray initialization did not complete",tray.Failure);
     var context=typeof(TrayHost).GetField("context",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(tray);
     var dispatcher=(Control)context.GetType().GetField("Dispatcher",BindingFlags.Instance|BindingFlags.NonPublic).GetValue(context);
     dispatcher.Invoke(new MethodInvoker(delegate {

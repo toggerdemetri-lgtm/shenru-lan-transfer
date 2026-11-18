@@ -10,9 +10,9 @@ using System.Threading;
 using System.Web.Script.Serialization;
 [assembly: AssemblyTitle("深入·局域网互传")]
 [assembly: AssemblyProduct("深入·局域网互传")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0")]
-[assembly: AssemblyInformationalVersion("1.0.0")]
+[assembly: AssemblyVersion("1.0.1.0")]
+[assembly: AssemblyFileVersion("1.0.1")]
+[assembly: AssemblyInformationalVersion("1.0.1")]
 internal static class Program
 {
     private static readonly JavaScriptSerializer Json = new JavaScriptSerializer();
@@ -88,28 +88,41 @@ internal static class Program
                 if (wait != 0 || result == null) throw new Exception(child.HasExited ? "连接进程提前退出：" + log : "启动超时，请检查网络权限。");
                 var url = (string)result["url"];
                 var mode = (string)result["mode"];
-                tray = new TrayHost(delegate {
-                    try { OpenUrl(url); } catch (Exception error) { ShowNotice("深入·局域网互传 · 打开空间", error.Message + "\n空间地址：" + url); }
-                }, delegate { StopRequested.Set(); }, mode);
-                File.WriteAllText(Path.Combine(Home, "tray-ready.json"), Json.Serialize(new Dictionary<string, object> {
-                    { "pid", Process.GetCurrentProcess().Id }, { "mode", mode }, { "backend", "NotifyIcon" }, { "menu", new string[] { "打开深入·局域网互传", "退出深入·局域网互传" } }
-                }), new UTF8Encoding(false));
+                if (StopRequested.WaitOne(0)) return 0;
+                try { OpenUrl(url); } catch { if (!NoBrowser) ShowNotice("深入·局域网互传已在后台运行", "请在浏览器打开空间地址：" + url); }
+                try {
+                    tray = new TrayHost(delegate {
+                        try { OpenUrl(url); } catch (Exception error) { ShowNotice("深入·局域网互传 · 打开空间", error.Message + "\n空间地址：" + url); }
+                    }, delegate { StopRequested.Set(); }, mode);
+                    if (tray.WaitForStartup(10000)) {
+                        File.WriteAllText(Path.Combine(Home, "tray-ready.json"), Json.Serialize(new Dictionary<string, object> {
+                            { "pid", Process.GetCurrentProcess().Id }, { "mode", mode }, { "backend", "NotifyIcon" }, { "menu", new string[] { "打开深入·局域网互传", "退出深入·局域网互传" } }
+                        }), new UTF8Encoding(false));
+                    } else {
+                        var failure = tray.Failure;
+                        WriteTrayWarning(failure == null ? "系统托盘启动超时。" : failure.ToString());
+                    }
+                } catch (Exception error) {
+                    WriteTrayWarning(error.ToString());
+                }
                 var warning = (string)result["warning"];
                 if (!String.IsNullOrEmpty(warning)) { File.WriteAllText(Path.Combine(Home, "last-warning.txt"), warning); if (!NoBrowser) ShowNotice("深入·局域网互传 · 连接提示", warning); }
-                try { OpenUrl(url); } catch { if (!NoBrowser) ShowNotice("深入·局域网互传已在后台运行", "请在浏览器打开空间地址：" + url); }
                 int delay;
                 if (Int32.TryParse(Environment.GetEnvironmentVariable("SHENRU_AUTO_EXIT_MS"), out delay) && delay > 0) timer = new Timer(_ => StopRequested.Set(), null, delay, Timeout.Infinite);
                 if (WaitHandle.WaitAny(new WaitHandle[] { StopRequested, exited }) == 1) throw new Exception("空间进程已退出：" + log);
-                if (tray.Failure != null) throw new Exception("系统托盘意外退出。", tray.Failure);
             } finally {
                 lock (lifetimeGate) { closing = true; } if (timer != null) timer.Dispose();
-                if (tray != null) tray.Dispose();
                 try { File.Delete(Path.Combine(Home, "tray-ready.json")); } catch {}
                 if (!child.HasExited) try { child.StandardInput.WriteLine("stop"); child.StandardInput.Flush(); if (!child.WaitForExit(10000)) child.Kill(); } catch {}
                 child.WaitForExit(); try { File.Delete(SessionPath); } catch {}
+                if (tray != null) tray.Dispose();
             }
             return child.ExitCode;
         }
+    }
+    private static void WriteTrayWarning(string message)
+    {
+        try { File.WriteAllText(Path.Combine(Home, "tray-warning.txt"), message, new UTF8Encoding(false)); } catch {}
     }
     private static void ShowNotice(string title, string message)
     {
